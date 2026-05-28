@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Bebas Neue", sans-serif;
+  --font-montserrat: "Montserrat", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --color-brand-black: #070707;
+  --color-brand-red: #B31217;
+  --color-brand-glow: #FF2E2E;
+  --color-brand-green: #2ECC71;
+  --color-brand-text: #CFCFCF;
+}
+
+/* Diagonal line textured overlay for premium military look */
+.diagonal-patterns {
+  background-image: repeating-linear-gradient(45deg, rgba(255, 46, 46, 0.03) 0px, rgba(255, 46, 46, 0.03) 1px, transparent 1px, transparent 20px);
+}
+
+.diagonal-patterns-subtle {
+  background-image: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.01) 0px, rgba(255, 255, 255, 0.01) 1px, transparent 1px, transparent 15px);
+}
+
+/* Crimson glow effects */
+.radial-red-glow {
+  background: radial-gradient(circle, rgba(179, 18, 23, 0.35) 0%, rgba(255, 46, 46, 0.08) 50%, rgba(7, 7, 7, 0) 100%);
+  filter: blur(40px);
+}
+
+.radial-top-glow {
+  background: radial-gradient(ellipse at top, rgba(179, 18, 23, 0.4) 0%, rgba(7, 7, 7, 0) 70%);
+}
+
+/* Double-side neon ambient pulse for the button */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.4), 0 0 30px rgba(46, 204, 113, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(46, 204, 113, 0.7), 0 0 50px rgba(46, 204, 113, 0.4);
+  }
+}
+
+@keyframes marquee-ltr {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee-ltr {
+  animation: marquee-ltr 45s linear infinite;
+}
+
+.animate-marquee-ltr:hover {
+  animation-play-state: paused;
+}
+
+.btn-neon-hover {
+  animation: neonPulse 3s infinite;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-neon-hover:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 0 35px rgba(46, 204, 113, 0.9), 0 0 60px rgba(46, 204, 113, 0.5);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #070707;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(179, 18, 23, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 46, 46, 0.6);
+}
+

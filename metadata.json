@@ -1,0 +1,6 @@
+{
+  "name": "Hero - Filhos Fortes",
+  "description": "Uma Landing Page de alta conversão, responsiva e dinâmica baseada nos princípios da LP Instinto Primitivo para o treinamento de filhos fortes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
