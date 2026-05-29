@@ -22,13 +22,20 @@ import {
   Send,
   ThumbsDown,
   CheckCheck,
-  User
+  User,
+  Mail,
+  CreditCard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 // Import generated portrait and book mockup assets
-import wagnerPortrait from './assets/images/wagner_portrait_1779885667218.png';
-import bookMockup from './assets/images/book_mockup_1779885651312.png';
+import wagnerPortrait from './assets/images/wagner_portrait_new_1780028577823.png';
+import wagnerSmiling from './assets/images/wagner_smiling_1780063331595.png';
+import wagnerSidePose from './assets/images/wagner_side_pose_1780064104775.png';
+const heroCompositeBlock = "https://i.postimg.cc/FFcbXhm7/Chat-GPT-Image-29-de-mai-de-2026-10-56-08.png";
+import familyPortrait from './assets/images/family_portrait_1780062262772.png';
+const bioImage = "https://i.postimg.cc/x1bntpL1/familia.png";
+const bookMockup = "https://i.postimg.cc/jSgBmhdy/fc780fab-1ac2-48ea-81ba-62597922f709.jpg";
 import cardImage1 from './assets/images/father_son_phone_1779907719122.png';
 import cardImage2 from './assets/images/father_son_mirror_1779907739804.png';
 import cardImage3 from './assets/images/father_son_respect_1779907759390.png';
@@ -110,7 +117,7 @@ const BONUS_ITEMS = [
   {
     title: "AUDIOLIVRO",
     description: [
-      "Acesso imediato e vitalício à versão em audiobook completa do Guia Prático Código do Patriarca.",
+      "Acesso imediato e vitalício à versão em audiobook completa do Guia Prático Código do Patriarca (método central do Treinamento Paternidade com Propósito).",
       "Ideal para você escutar e obter o conhecimento de forma prática no trânsito, durante caminhadas ou no seu dia a dia."
     ],
     valor: "27",
@@ -118,7 +125,7 @@ const BONUS_ITEMS = [
     type: "book-headphones"
   },
   {
-    title: "Invitación a prueba de rechazo (Diálogo Anti-Rejeição)",
+    title: "Convite à Prova de Rejeição (Diálogo Anti-Rejeição)",
     description: [
       "Descubra a abordagem infalível para iniciar conversas importantes com seus filhos sem que eles se fechem,",
       "de uma forma que quebra a barreira da timidez e resistência habitual, fazendo com que eles sintam o desejo espontâneo de falar com você."
@@ -411,10 +418,26 @@ export default function App() {
   const [activeVarIndex, setActiveVarIndex] = useState(0);
   const activeVar = AB_VARIATIONS[activeVarIndex];
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [checkoutStep, setCheckoutStep] = useState(1);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '' });
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  // Real-time masking for Telephone value ((00) 00000-0000)
+  const handlePhoneChange = (val: string) => {
+    const rawNumbers = val.replace(/\D/g, '').slice(0, 11);
+    let formatted = rawNumbers;
+    if (rawNumbers.length > 10) {
+      formatted = `(${rawNumbers.slice(0, 2)}) ${rawNumbers.slice(2, 7)}-${rawNumbers.slice(7)}`;
+    } else if (rawNumbers.length > 6) {
+      formatted = `(${rawNumbers.slice(0, 2)}) ${rawNumbers.slice(2, 6)}-${rawNumbers.slice(6)}`;
+    } else if (rawNumbers.length > 2) {
+      formatted = `(${rawNumbers.slice(0, 2)}) ${rawNumbers.slice(2)}`;
+    } else if (rawNumbers.length > 0) {
+      formatted = `(${rawNumbers}`;
+    }
+    setFormData(prev => ({ ...prev, phone: formatted }));
+  };
 
   // Helper to switch variations in hero dynamically
   const nextVariation = () => {
@@ -423,11 +446,48 @@ export default function App() {
 
   const handleCheckoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (checkoutStep === 1) {
-      setCheckoutStep(2);
-    } else {
-      setCheckoutSuccess(true);
+    setCheckoutError('');
+
+    if (!formData.name.trim()) {
+      setCheckoutError('Por favor, digite seu nome completo.');
+      return;
     }
+
+    if (!formData.email.trim() || !formData.email.includes('@')) {
+      setCheckoutError('Por favor, digite um e-mail válido.');
+      return;
+    }
+
+    const rawPhone = formData.phone.replace(/\D/g, '');
+    if (rawPhone.length < 10) {
+      setCheckoutError('Por favor, informe seu WhatsApp com DDD (mínimo 10 dígitos).');
+      return;
+    }
+
+    // Set redirecting state
+    setCheckoutSuccess(true);
+
+    // Build perfect pre-filled message text
+    const message = `Quero adquirir o Método Código do Patriarca: incluso integralmente dentro do Treinamento Paternidade com Propósito , de R$ 697,00 por apenas R$ 27,00 , que esta em promoção somente hoje.\n\n` +
+                    `📋 *DADOS PARA CADASTRO DE ACESSO EXCLUSIVO*:\n` +
+                    `👤 *Nome completo*: ${formData.name.trim()}\n` +
+                    `📧 *E-mail principal*: ${formData.email.trim()}\n` +
+                    `📱 *WhatsApp*: ${formData.phone.trim()}`;
+
+    // Target Phone: +55 69 99229 4953 -> 5569992294953
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=5569992294953&text=${encodeURIComponent(message)}`;
+
+    // Beautiful redirection lag
+    setTimeout(() => {
+      try {
+        const win = window.open(whatsappUrl, '_blank');
+        if (!win || win.closed) {
+          window.location.href = whatsappUrl;
+        }
+      } catch (err) {
+        window.location.href = whatsappUrl;
+      }
+    }, 1200);
   };
 
   return (
@@ -451,24 +511,63 @@ export default function App() {
 
           {/* Nav menu links styled as right aligned options in red hue */}
           <div className="flex items-center gap-6 text-xs sm:text-sm font-bold text-[#CFCFCF] tracking-wide relative">
-            <div className="relative py-1 cursor-pointer text-white group" id="nav-inicio">
+            <div 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="relative py-1 cursor-pointer text-white group" 
+              id="nav-inicio"
+            >
               <span>Início</span>
               <div className="w-full h-0.5 bg-[#B31217] absolute bottom-0 left-0" />
             </div>
-            <div className="hover:text-white transition-colors cursor-pointer py-1" id="nav-sobre">Sobre</div>
-            <div className="hover:text-white transition-colors cursor-pointer py-1" id="nav-comprar">Comprar</div>
-            <div className="hover:text-white transition-colors cursor-pointer py-1 text-gray-400" id="nav-faq">FAQ</div>
+            <div 
+              onClick={() => document.getElementById('etapa-14')?.scrollIntoView({ behavior: 'smooth' })}
+              className="hover:text-white transition-colors cursor-pointer py-1" 
+              id="nav-sobre"
+            >
+              Sobre
+            </div>
+            <div 
+              onClick={() => document.getElementById('etapa-11')?.scrollIntoView({ behavior: 'smooth' })}
+              className="hover:text-white transition-colors cursor-pointer py-1" 
+              id="nav-comprar"
+            >
+              Comprar
+            </div>
+            <div 
+              onClick={() => document.getElementById('etapa-15')?.scrollIntoView({ behavior: 'smooth' })}
+              className="hover:text-white transition-colors cursor-pointer py-1 text-gray-400" 
+              id="nav-faq"
+            >
+              FAQ
+            </div>
           </div>
 
         </div>
       </nav>
 
       {/* Hero Section Container (Fits perfectly on the first fold without scrolling or requiring scroll on desktop) */}
-      <section className="relative flex-1 flex flex-col justify-center px-4 sm:px-8 md:px-12 bg-zinc-950 diagonal-patterns overflow-hidden relative" id="hero-section">
+      <section className="relative flex-1 flex flex-col justify-center px-4 sm:px-8 md:px-12 bg-gradient-to-b from-[#120204]/98 via-[#210408] to-[#040102] overflow-hidden" id="hero-section">
         
-        {/* Glowing atmospheric halo background colors behind images */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[550px] h-[550px] radial-red-glow pointer-events-none opacity-85 z-0" />
-        <div className="absolute left-[20%] top-1/4 w-[350px] h-[350px] bg-[#B31217]/10 blur-[90px] rounded-full pointer-events-none z-0" />
+         {/* Elegant damask wallpaper watermark overlay matching the 8K reference image */}
+         <div className="absolute inset-0 opacity-[0.05] mix-blend-color-dodge pointer-events-none" id="hero-damask-wallpaper">
+           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+             <pattern id="damask-pattern" width="160" height="160" patternUnits="userSpaceOnUse">
+               <path d="M80 0 C100 30 115 50 115 70 C115 95 95 115 80 115 C65 115 45 95 45 70 C45 50 60 30 80 0 Z" fill="none" stroke="#d4af37" strokeWidth="1.5" />
+               <path d="M80 15 C92 40 102 55 102 70 C102 85 92 98 80 98 C68 98 58 85 58 70 C58 55 68 40 80 15 Z" fill="none" stroke="#d4af37" strokeWidth="1" strokeDasharray="3,3" />
+               <path d="M80 40 L80 80 M65 65 L95 65" stroke="#d4af37" strokeWidth="1" />
+               <path d="M0 80 C20 110 35 130 35 150 C35 175 15 195 0 195 C-15 195 -35 175 -35 150 C-35 130 -20 110 0 80 Z" fill="none" stroke="#d4af37" strokeWidth="1" />
+               <path d="M160 80 C180 110 195 130 195 150 C195 175 175 195 160 195 C145 195 125 175 125 150 C125 130 140 110 160 80 Z" fill="none" stroke="#d4af37" strokeWidth="1" />
+               <path d="M20 30 C30 20 50 20 60 35 C65 42 62 55 50 60 C38 65 25 55 20 30 Z" fill="none" stroke="#d4af37" strokeWidth="1" />
+               <path d="M140 30 C130 20 110 20 100 35 C95 42 98 55 110 60 C122 65 135 55 140 30 Z" fill="none" stroke="#d4af37" strokeWidth="1" />
+             </pattern>
+             <rect width="100%" height="100%" fill="url(#damask-pattern)" />
+           </svg>
+         </div>
+
+         {/* Glowing atmospheric halo background colors behind images */}
+         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[#d4af37]/10 blur-[130px] rounded-full pointer-events-none opacity-40 z-0" />
+         <div className="absolute right-10 top-1/3 w-[450px] h-[450px] bg-[#B31217]/50 blur-[100px] rounded-full pointer-events-none z-0" />
+         <div className="absolute left-[20%] top-1/4 w-[350px] h-[350px] bg-[#B31217]/20 blur-[100px] rounded-full pointer-events-none z-0" />
 
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center relative z-10 py-4 lg:py-0">
           
@@ -477,7 +576,7 @@ export default function App() {
             
             {/* Interactive perspective toggler built seamlessly inline */}
             <div className="flex flex-wrap items-center gap-2" id="micro-headline-container">
-              <div className="flex items-center flex-wrap gap-x-1.5 font-montserrat text-[10px] sm:text-xs" id="micro-headline-text-wrapper">
+              <div className="flex items-center flex-wrap gap-x-1.5 font-sans text-[10px] sm:text-xs" id="micro-headline-text-wrapper">
                 <span className="text-white">●</span>
                 {activeVar.microHeadline.includes('—') ? (
                   <>
@@ -498,7 +597,7 @@ export default function App() {
             </div>
 
             {/* Main high impact headline with optimal height scale */}
-            <h1 className="text-base sm:text-lg md:text-2xl lg:text-[27px] font-black text-white leading-[1.12] font-montserrat uppercase tracking-tight" id="main-headline">
+            <h1 className="text-base sm:text-lg md:text-2xl lg:text-[27px] font-black text-white leading-[1.12] font-sans uppercase tracking-tight" id="main-headline">
               {activeVar.headline.includes('E ENSINAR DISCIPLINA, CONFIANÇA, RESPEITO E VALORES QUE OS DIFERENCIAM DESTA GERAÇÃO.') ? (
                 <>
                   {activeVar.headline.split('E ENSINAR DISCIPLINA, CONFIANÇA, RESPEITO E VALORES QUE OS DIFERENCIAM DESTA GERAÇÃO.')[0]}
@@ -535,6 +634,15 @@ export default function App() {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-white">Desenvolvido por Wagner Ferraz (Pastor, 1º Sargento da Policia Militar e pai de 3 filhos)</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5">
+                <div className="bg-[#B31217]/25 p-0.5 rounded text-[#FF2E2E] shrink-0 mt-0.5 border border-[#B31217]/40">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white">Método Código do Patriarca: incluso integralmente dentro do Treinamento Paternidade com Propósito</p>
                 </div>
               </div>
 
@@ -603,107 +711,40 @@ export default function App() {
 
           </div>
 
-          {/* LADO DIREITO: COMPOSITE DE ALTA PERFORMANCE COM WAGNER E LIVRO 3D */}
-          <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[280px] sm:min-h-[350px] lg:min-h-0" id="right-hero-column">
+          {/* LADO DIREITO: EXCLUSIVA DESIGN MODELAGEM COM A IMAGEM DE ALTA DEFINIÇÃO DO PRODUTO */}
+          <div className="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[460px] sm:min-h-[520px] lg:min-h-[580px] xl:min-h-[660px] select-none overflow-visible w-full mt-8 lg:mt-0" id="right-hero-column">
             
-            {/* Ambient intense glow spotlight on standard products */}
-            <div className="absolute w-[320px] h-[320px] bg-[#B31217]/40 blur-[85px] rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mix-blend-screen opacity-90 pointer-events-none" />
+            {/* Background texture & warm gold glow behind the book mockup */}
+            <div className="absolute w-[320px] h-[320px] bg-[#d4af37]/8 blur-[90px] rounded-full top-[40%] left-[30%] -translate-x-1/2 -translate-y-1/2 mix-blend-screen opacity-90 pointer-events-none" />
+            <div className="absolute w-[400px] h-[400px] bg-[#7c0716]/20 blur-[90px] rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
 
-            {/* Circular rotating badge exactly like the "CÓDIGO DOS PAIS" badge */}
-            <div className="absolute left-0 bottom-4 sm:bottom-10 z-30 block" id="rotating-vinyl-badge">
-              <div className="w-[120px] h-[120px] sm:w-[180px] sm:h-[180px] rounded-full bg-[#070707]/90 backdrop-blur-sm border border-[#B31217]/40 flex items-center justify-center relative shadow-2xl">
-                <svg className="w-full h-full p-2.5 sm:p-4 animate-spin" style={{ animationDuration: '18s' }} viewBox="0 0 100 100">
-                  <defs>
-                    <path id="circlePath" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" />
-                  </defs>
-                  <text fill="#ffffff" fontSize="8" fontWeight="bold" letterSpacing="1px">
-                    <textPath href="#circlePath" startOffset="0%">
-                      • MÉTODO FILHOS FORTES • CÓDIGO DO PAI • 
-                    </textPath>
-                  </text>
-                </svg>
-                <div className="absolute w-12 h-12 sm:w-[72px] sm:h-[72px] rounded-full bg-[#B31217]/25 border border-[#B31217]/40 flex items-center justify-center shadow-lg">
-                  <Shield className="w-6 h-6 sm:w-10 sm:h-10 text-[#FF2E2E]" />
-                </div>
+            {/* Pristine high-definition single composite block, beautifully scaled, shifted to the right, and masked to blend perfectly */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.97, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              onClick={() => setIsCheckoutOpen(true)}
+              className="relative w-full h-full flex items-center justify-center cursor-pointer z-10 scale-[1.1] sm:scale-[1.2] lg:scale-[1.35] origin-center lg:translate-x-12 xl:translate-x-20"
+              style={{
+                maskImage: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 72%, rgba(0,0,0,0) 100%)',
+                WebkitMaskImage: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 72%, rgba(0,0,0,0) 100%)'
+              }}
+              id="hero-composite-illustration-container"
+            >
+              <img 
+                src={heroCompositeBlock} 
+                alt="Kit Premium Paternidade com Propósito - Wagner Ferraz" 
+                className="w-full h-auto object-contain drop-shadow-[0_25px_50px_rgba(0,0,0,0.85)] filter brightness-[1.02] contrast-[1.01] hover:scale-[1.015] transition-all duration-500 rounded-lg"
+                referrerPolicy="no-referrer"
+                id="hero-composite-main-image"
+              />
+
+              {/* FLOATING ACTIVE PREMIUM BADGE */}
+              <div className="absolute bottom-[4%] left-1/2 -translate-x-1/2 z-40 bg-black/85 backdrop-blur-md border border-[#d4af37]/45 rounded-full px-4 py-1.5 flex items-center gap-1.5 shadow-[0_8px_20px_rgba(0,0,0,0.6)] select-none" id="premium-badge-tag-html">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#2ECC71] animate-pulse" />
+                <span className="text-[10px] sm:text-[11px] font-black tracking-widest text-[#d4af37] uppercase font-mono">KIT PREMIUM ATIVO</span>
               </div>
-            </div>
-
-            {/* Main Interactive Visual Frame */}
-            <div className="relative w-full max-w-[380px] lg:max-w-none aspect-[4/3] sm:aspect-[4/5] lg:aspect-[5/6]" id="interactive-visual-composite">
-              
-              {/* BACK layer: Elegant Portrait of Wagner Ferraz */}
-              <div className="absolute right-0 bottom-0 w-[78%] h-[85%] z-10" id="portrait-wrapper">
-                <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/5 bg-gradient-to-t from-[#070707] to-transparent">
-                  <img 
-                    src={wagnerPortrait} 
-                    alt="Capitão Wagner Ferraz" 
-                    className="w-full h-full object-cover object-center translate-y-3 opacity-90 saturate-[0.95]"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent" />
-                </div>
-              </div>
-
-              {/* MIDDLE layer: 3D Hardcover Book Mockup Floating */}
-              <motion.div 
-                initial={{ y: 15 }}
-                animate={{ y: [0, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 5.5, ease: 'easeInOut' }}
-                className="absolute left-0 top-1/4 w-[54%] z-25 drop-shadow-[0_20px_25px_rgba(179,18,23,0.35)]" 
-                id="book-wrapper"
-              >
-                <img 
-                  src={bookMockup} 
-                  alt="3D Mockup Manual Filhos Fortes" 
-                  className="w-full h-auto object-contain rounded-xl"
-                  referrerPolicy="no-referrer"
-                />
-              </motion.div>
-
-              {/* FRONT layer: Interactive Smartphone Frame sitting next to the book */}
-              <motion.div 
-                initial={{ y: -5 }}
-                animate={{ y: [0, 6, 0] }}
-                transition={{ repeat: Infinity, duration: 4.8, ease: 'easeInOut', delay: 0.8 }}
-                onClick={() => setIsCheckoutOpen(true)}
-                className="absolute right-[22%] top-[10%] w-[33%] z-30 cursor-pointer hidden sm:block group" 
-                id="phone-wrapper"
-              >
-                <div className="relative bg-zinc-900 rounded-[22px] p-1.5 border border-white/10 shadow-2xl overflow-hidden transform group-hover:scale-103 transition-transform">
-                  
-                  {/* Speaker and Camera notch detail */}
-                  <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-2.5 bg-black rounded-full z-40 flex items-center justify-around px-1.5">
-                    <div className="w-0.5 h-0.5 rounded-full bg-zinc-700" />
-                    <div className="w-2.5 h-0.5 rounded-full bg-zinc-700" />
-                  </div>
-
-                  {/* Inside Mockup Screen */}
-                  <div className="aspect-[9/19] bg-[#070707] rounded-[16px] overflow-hidden flex flex-col justify-between border border-transparent group-hover:border-[#B31217]/50 transition-colors relative">
-                    <div className="p-2 pt-4 bg-gradient-to-b from-[#B31217]/40 to-transparent">
-                      <div className="flex justify-between items-center text-[5.5px] text-gray-400 font-mono">
-                        <span>LIVRO DIGITAL</span>
-                        <span>v1.2</span>
-                      </div>
-                      <div className="mt-2 text-[8px] font-black uppercase text-white font-montserrat leading-tight">
-                        Manual Filhos Fortes
-                      </div>
-                      <div className="w-3 h-0.5 bg-[#B31217] mt-0.5" />
-                      
-                      <div className="mt-1.5 text-[5px] text-gray-300 leading-normal text-justify line-clamp-4">
-                        "A verdadeira liderança não repousa sobre a intransigência, mas sobre a consistência de princípios e o exemplo inabalável de disciplina no lar..."
-                      </div>
-                    </div>
-
-                    <div className="p-2 bg-black/90 text-center border-t border-white/5">
-                      <p className="text-[5.5px] font-bold text-[#2ECC71] uppercase tracking-wide">✔ PDF + Áudio de Guerra</p>
-                      <button className="mt-1 w-full bg-[#B31217] hover:bg-[#FF2E2E] text-[5px] font-black uppercase py-0.5 text-white rounded transition-colors">
-                        Começar Leitura
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -1430,7 +1471,7 @@ export default function App() {
               </p>
 
               <p className="select-text">
-                Todo esse segredo comprovado está reunido na prática dentro do <strong className="text-white font-extrabold">Código do Patriarca</strong>. Um material testado no campo de batalha que mostra passo a passo como reatar a conexão com seu filho, blindá-lo contra influências destrutivas e guiar sua casa com orgulho e segurança.
+                Todo esse segredo comprovado está reunido na prática dentro do <strong className="text-white font-extrabold">Código do Patriarca</strong> (que você encontra integralmente dentro do Treinamento <strong className="text-[#FF2E2E] font-extrabold">Paternidade com Propósito</strong>). Um material testado no campo de batalha que mostra passo a passo como reatar a conexão com seu filho, blindá-lo contra influências destrutivas e guiar sua casa com orgulho e segurança.
               </p>
 
             </div>
@@ -1443,21 +1484,16 @@ export default function App() {
               
               {/* Card 1: Top-Left Academic/ Prestigious Harvard Setting Image */}
               <div 
-                className="absolute top-0 left-0 w-[62%] aspect-[9/11] rounded-[24px] overflow-hidden shadow-2xl border border-white/5 bg-[#1F1F1F] hover:scale-[1.02] hover:-rotate-1 transition-all duration-500 z-10" 
+                className="absolute top-0 left-0 w-[62%] aspect-[9/11] rounded-[24px] overflow-hidden shadow-2xl hover:scale-[1.02] hover:-rotate-1 transition-all duration-500 z-10" 
                 id="academic-proof-card"
               >
                 {/* Academic/Harvard prestigious backdrop */}
                 <img 
-                  src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=600&q=80" 
+                  src="https://i.postimg.cc/HLdWn47b/Design-sem-nome-(7).png" 
                   alt="Pesquisa Acadêmica e Comportamental" 
-                  className="w-full h-full object-cover filter brightness-[0.85] contrast-[1.05]"
+                  className="w-full h-full object-cover filter brightness-[0.95] contrast-[1.02]"
                   referrerPolicy="no-referrer"
                 />
-                
-                {/* Label badge on top like Science Center placeholder in reference */}
-                <div className="absolute top-4 left-4 bg-black/75 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 select-none">
-                  <span className="text-[9px] font-black tracking-widest text-[#FFD700] uppercase font-mono">MIT/HARVARD STUDY</span>
-                </div>
               </div>
 
               {/* Card 2: Bottom-Right Wagner Portrait Overlapping Card */}
@@ -1467,9 +1503,9 @@ export default function App() {
               >
                 {/* Render author portrait */}
                 <img 
-                  src={wagnerPortrait} 
+                  src="https://i.postimg.cc/8zWsjzKW/Design-sem-nome-(6).png" 
                   alt="Wagner Ferraz - Autor" 
-                  className="w-full h-full object-cover filter brightness-[0.95]"
+                  className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
 
@@ -1502,7 +1538,7 @@ export default function App() {
 
           {/* Headline exactly matching photo layout weight */}
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[32px] font-black text-white leading-tight font-sans tracking-tight max-w-3xl mb-12 uppercase select-none" id="block-06-head">
-            Se você está cansado de ser ignorado, de falar e ser deixado falando sozinho ou de ver seus filhos te trocarem por influências muito PIORES do que você... <span className="text-[#FF2E2E] block mt-2 normal-case font-bold">Com o Código do Patriarca você vai:</span>
+            Se você está cansado de ser ignorado, de falar e ser deixado falando sozinho ou de ver seus filhos te trocarem por influências muito PIORES do que você... <span className="text-[#FF2E2E] block mt-2 normal-case font-bold">Com o Código do Patriarca (método central do Treinamento Paternidade com Propósito) você vai:</span>
           </h2>
 
           {/* Cards List Layout with thin red borders */}
@@ -1570,7 +1606,7 @@ export default function App() {
 
             {/* Headline matching mockup layout */}
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-[32px] font-black text-neutral-900 leading-tight tracking-tight max-w-4xl font-sans" id="block-07-head">
-              Isto é o que você descobrirá <span className="text-[#B31217]">no Código do Patriarca:</span>
+              Isto é o que você descobrirá <span className="text-[#B31217]">no Código do Patriarca (método que integra o Treinamento Paternidade com Propósito):</span>
             </h2>
 
           </div>
@@ -1578,17 +1614,17 @@ export default function App() {
           {/* Interactive Open-Book Spread Section Layout - Adjusted size, gap and alignment */}
           <div className="flex flex-col lg:flex-row items-center lg:items-stretch justify-center w-full max-w-7xl mx-auto mt-12 gap-8 lg:gap-12 relative" id="block-07-spread">
             
-            {/* Left Cover (Visible on all screens, styled Portrait, with exact height of the text block container next to it, not glued) */}
+            {/* Left Cover - Complete image showing the complete cover without any cuts */}
             <div className="w-full lg:w-[32%] flex items-center justify-center lg:justify-end select-none relative z-30" id="block-07-left-cover-showcase">
               <div 
-                className="relative w-full max-w-[300px] lg:max-w-none lg:w-full lg:h-full aspect-[3/4] lg:aspect-auto flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-[1.03]" 
+                className="relative w-full max-w-[340px] flex items-center justify-center cursor-pointer transition-all duration-500 hover:scale-[1.03]" 
                 onClick={() => setIsCheckoutOpen(true)}
               >
-                <div className="absolute inset-0 bg-[#B31217]/15 blur-[40px] rounded-[24px] sm:rounded-[36px] pointer-events-none" id="block-07-cover-shadow-glow" />
+                <div className="absolute inset-0 bg-[#B31217]/15 blur-[35px] rounded-[24px] sm:rounded-[32px] pointer-events-none" id="block-07-cover-shadow-glow" />
                 <img 
                   src={bookMockup} 
-                  alt="Livro Código do Patriarca" 
-                  className="w-full h-full object-cover rounded-[24px] sm:rounded-[36px] border-4 border-[#B31217]/15 shadow-[0_30px_70px_rgba(0,0,0,0.35)] filter hover:brightness-110 transition-all duration-300"
+                  alt="Livro Código do Patriarca Completo" 
+                  className="w-full h-auto object-contain rounded-[24px] sm:rounded-[32px] border-2 border-[#B31217]/15 shadow-[0_25px_55px_rgba(0,0,0,0.3)] filter hover:brightness-105 transition-all duration-300"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -1890,14 +1926,14 @@ export default function App() {
                 "Útil em momentos de crise familiar, decisões sérias de atitude, ou no diálogo cotidiano espontâneo.",
                 "E também para pais tímidos, inseguros, cansados ou que sentem que perderam a autoridade perante a família."
               ].map((item, index) => (
-                <div key={index} className="flex items-center gap-3 sm:gap-4 py-3.5 border-b border-neutral-200/50 flex-row" id={`block-09-item-${index}`}>
+                <div key={index} className="flex items-start gap-3 sm:gap-4 py-3.5 border-b border-neutral-200/50 flex-row" id={`block-09-item-${index}`}>
                   {/* Custom Red Badge icon representing clean validation checkbox matching the mockup look */}
-                  <div className="flex-shrink-0 w-5 h-5 sm:w-5.5 sm:h-5.5 bg-[#B31217] rounded-md flex items-center justify-center text-white shadow-sm" id={`block-09-icon-box-${index}`}>
+                  <div className="flex-shrink-0 w-5 h-5 sm:w-5.5 sm:h-5.5 bg-[#B31217] rounded-md flex items-center justify-center text-white shadow-sm mt-0.5" id={`block-09-icon-box-${index}`}>
                     <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   </div>
-                  <p className="text-xs sm:text-sm lg:text-[14px] xl:text-[15.5px] text-neutral-800 font-bold font-sans tracking-tight whitespace-normal lg:whitespace-nowrap overflow-hidden text-ellipsis" id={`block-09-item-text-${index}`}>
+                  <p className="text-xs sm:text-sm lg:text-[14px] xl:text-[15.5px] text-neutral-800 font-bold font-sans tracking-tight whitespace-normal" id={`block-09-item-text-${index}`}>
                     {item}
                   </p>
                 </div>
@@ -1913,7 +1949,7 @@ export default function App() {
             <div className="absolute inset-x-0 w-2/3 h-2/3 bg-[#B31217]/10 blur-[80px] rounded-full pointer-events-none" />
 
             {/* Overlapping Mockup Composition container */}
-            <div className="relative w-full max-w-[420px] sm:max-w-[460px] aspect-[4/3] flex items-center justify-center" id="block-09-mockups-composer">
+            <div className="relative w-full max-w-[420px] sm:max-w-[460px] aspect-[4/3] flex items-center justify-center font-sans animate-fade-in" id="block-09-mockups-composer">
               
               {/* Smartphone Mockup on the Left (Z-index 20) */}
               <div 
@@ -1926,18 +1962,14 @@ export default function App() {
                   <div className="w-1.5 h-1.5 rounded-full bg-neutral-800 mr-2" />
                   <div className="w-6 h-0.5 rounded-full bg-neutral-800" />
                 </div>
-                {/* Phone screen carrying the book design */}
-                <div className="relative w-full h-full rounded-[22px] overflow-hidden bg-neutral-950 flex flex-col justify-end" id="block-09-phone-screen">
+                {/* Phone screen carrying the book design complete and uncut */}
+                <div className="relative w-full h-full rounded-[22px] overflow-hidden bg-neutral-950 flex flex-col justify-center" id="block-09-phone-screen">
                   <img 
                     src={bookMockup} 
                     alt="Capa Digital Código do Patriarca" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/5 flex flex-col justify-end p-3 z-10" id="phone-screen-label">
-                    <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest leading-none font-sans mb-0.5">Audiolivro & Digital</span>
-                    <span className="text-[10px] sm:text-xs font-black text-white leading-tight font-sans">CÓDIGO DO PATRIARCA</span>
-                  </div>
                 </div>
               </div>
 
@@ -1958,7 +1990,6 @@ export default function App() {
               </div>
 
             </div>
-
           </div>
 
         </div>
@@ -2061,9 +2092,13 @@ export default function App() {
             COMPRA SEGURA
           </div>
 
-          <h2 className="text-2xl sm:text-3.5xl md:text-4.5xl font-black text-white tracking-tight uppercase font-montserrat mb-10 leading-tight" id="block-11-title">
+          <h2 className="text-2xl sm:text-3.5xl md:text-4.5xl font-black text-white tracking-tight uppercase font-montserrat mb-4 leading-tight" id="block-11-title">
             ISTO É <span className="text-[#FF2E2E]">TUDO O QUE VOCÊ VAI RECEBER</span>:
           </h2>
+
+          <p className="text-zinc-400 text-sm sm:text-base max-w-2xl mx-auto mb-10 font-sans leading-relaxed" id="block-11-subtitle-description">
+            Você receberá o acesso definitivo ao nosso Treinamento completo em vídeo, o Livro principal e o Manual Prático <strong className="text-white font-extrabold">'Paternidade com Propósito'</strong>, projetados para te dar direção absoluta na criação de filhos fortes e respeitosos, além de todos os materiais complementares e bônus da jornada.
+          </p>
 
           {/* Golden/Crimson border layout wrapper (exactly matching container card of mockups) */}
           <div className="w-full bg-neutral-950/70 border border-white/10 rounded-3xl p-6 sm:p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.85)]" id="block-11-offer-box">
@@ -2074,7 +2109,7 @@ export default function App() {
             {/* Checklist items list */}
             <div className="max-w-2xl mx-auto flex flex-col gap-3.5 mt-8 sm:mt-12 text-left" id="block-11-checklist-container">
               {[
-                "Acesso instantâneo ao Livro digital Código do Patriarca",
+                "Acesso instantâneo ao Treinamento digital Código do Patriarca - através do LIVRO Paternidade com Propósito",
                 "Versão completa em audiolivro com acesso imediato",
                 "Conteúdo completo e testado na reconstrução familiar",
                 "Acesso vitalício para sempre (sem taxas ou mensalidades)",
@@ -2162,7 +2197,7 @@ export default function App() {
               Chega de mendigar migalhas de atenção. Chega de ser trocado por telas de celular, mentiras na internet ou más amizades que só afastam ele da família.
             </p>
             <p className="italic text-zinc-300">
-              O <strong className="text-white not-italic font-black">Código do Patriarca</strong> é o passo que separa você de se tornar a autoridade amorosa e inabalável que seus filhos respeitam e seguem sem relutância.
+              O <strong className="text-white not-italic font-black">Código do Patriarca</strong> (método ensinado dentro do Treinamento <span className="text-[#FF2E2E] font-extrabold">Paternidade com Propósito</span>) é o passo que separa você de se tornar a autoridade amorosa e inabalável que seus filhos respeitam e seguem sem relutância.
             </p>
             <p className="text-[#FF2E2E] font-bold text-[11px] sm:text-xs tracking-wider uppercase font-mono pt-2">
               Nossos métodos são práticos, comprovados e desenhados para a realidade do dia a dia familiar.
@@ -2182,7 +2217,7 @@ export default function App() {
 
               <div>
                 <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight mb-8 font-sans border-b border-white/5 pb-4">
-                  Manual - Código do Patriarca
+                  Código do Patriarca (Dentro do Treinamento Paternidade com Propósito)
                 </h3>
 
                 <ul className="space-y-4 text-left" id="block-12-green-list">
@@ -2392,12 +2427,12 @@ export default function App() {
 
                 {/* Styled Big Title with generous leading and bold weighting */}
                 <h2 className="text-xl sm:text-2xl md:text-[28px] font-black text-white leading-tight tracking-tight uppercase font-montserrat" id="block-14-title">
-                  Aprenda com quem realmente conhece a <span className="text-[#FF2E2E]">verdadeira dinâmica familiar</span> e os comportamentos dos jovens:
+                  Aprenda com quem realmente conhece a <span className="text-[#FF2E2E]">verdadeira dinâmica familiar</span> e os comportamentos de filhos em formação
                 </h2>
 
                 {/* High Contrast Red Highlight Name */}
                 <div className="text-[#FF2E2E] text-2xl sm:text-3xl font-extrabold tracking-wider uppercase font-montserrat" id="block-14-name">
-                  WAGNER FERRAZ
+                  WAGNER FERRAZ & KATIA FERRAZ
                 </div>
 
                 {/* Paragraph segments precisely spaced with premium off-white typography */}
@@ -2409,7 +2444,7 @@ export default function App() {
                     Criador do movimento e do método blindado de paternidade consciente, ele ensina passo a passo como estabelecer limites saudáveis e amorosos de forma firme e respeitosa, neutralizando os efeitos destrutivos causados pelo vício em telas, más amizades na internet ou comportamentos rebeldes desta nova geração. Suas abordagens de campo já impactaram mais de 60.000 pessoas no país, tirando famílias da exaustão diária e trazendo uma realidade renovada para o lar.
                   </p>
                   <p className="select-text text-zinc-300">
-                    E agora Wagner consolida toda essa inteligência prática com a publicação do manual completo do <strong className="text-white font-black">«Código do Patriarca»</strong>. Um livro digital direto, funcional e com fundamentação prática para que você assuma de uma vez o comando do seu lar com paz, orgulho e autoridade inquestionável.
+                    E agora Wagner Ferraz consolida toda essa inteligência prática com a publicação do método completo do <strong className="text-white font-black">«Código do Patriarca»</strong>, totalmente masterizado em um livro digital direto <strong className="text-white font-black">Paternidade com Propósito</strong>, funcional e com fundamentação prática para que você assuma de uma vez o comando do seu lar com paz, orgulho e autoridade inquestionável.
                   </p>
                 </div>
 
@@ -2419,21 +2454,21 @@ export default function App() {
               <div className="md:col-span-5 flex justify-center relative select-none mt-4 md:mt-0" id="block-14-right">
                 
                 {/* Image shadow base structure */}
-                <div className="relative w-full max-w-[330px] aspect-[4/5] rounded-[24px] overflow-visible border border-white/5 shadow-2xl bg-neutral-900 group" id="block-14-image-container">
+                <div className="relative w-full max-w-[360px] aspect-[3/4] sm:aspect-[4/5] rounded-[24px] overflow-hidden border border-white/10 shadow-2xl bg-zinc-950 group" id="block-14-image-container">
                   
                   {/* Outer glowing border ring */}
                   <div className="absolute -inset-0.5 rounded-[26px] bg-gradient-to-b from-white/10 via-transparent to-neutral-800/20 pointer-events-none" />
 
-                  {/* High Quality Render of Author Wagner portrait */}
+                  {/* High Quality Render of Author portrait */}
                   <img 
-                    src={wagnerPortrait} 
-                    alt="Wagner Ferraz - Mentor de Pais e Criador do Código do Patriarca" 
-                    className="w-full h-full object-cover rounded-[24px] filter brightness-[1.0] group-hover:scale-[1.01] transition-all duration-500"
+                    src={bioImage} 
+                    alt="Wagner Ferraz - Família" 
+                    className="w-full h-full object-cover object-top rounded-[24px] filter brightness-[1.0] group-hover:scale-[1.01] transition-all duration-500"
                     referrerPolicy="no-referrer"
                     id="block-14-author-img"
                   />
 
-                  {/* Overlapping stylized badge circle on bottom-right edges resembling circular textured stamp in reference screenshot */}
+                  {/* Overlapping stylized badge circle on bottom-right edges resembling circular textured stamp */}
                   <div className="absolute -bottom-5 -right-5 w-24 sm:w-[108px] h-24 sm:h-[108px] rounded-full bg-neutral-950 border border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.85)] flex items-center justify-center z-20 overflow-visible" id="block-14-rubber-badge">
                     
                     {/* Tiny animated SVG circular text matching the aesthetic */}
@@ -2446,10 +2481,10 @@ export default function App() {
                       </text>
                     </svg>
 
-                    {/* Circular core preview containing blurred version of portrait */}
+                    {/* Circular core preview containing blurred version of the portrait */}
                     <div className="w-[66%] h-[66%] rounded-full overflow-hidden border border-white/10 bg-gradient-to-br from-[#B31217]/10 to-transparent flex items-center justify-center z-10 select-none">
                       <img 
-                        src={wagnerPortrait} 
+                        src={bioImage} 
                         className="w-full h-full object-cover filter blur-[1px] opacity-75" 
                         alt="" 
                         referrerPolicy="no-referrer" 
@@ -2477,16 +2512,24 @@ export default function App() {
           <div className="md:col-span-8 space-y-4" id="block-15-accordions">
             {[
               {
-                question: "O que é o manual Código do Patriarca?",
-                answer: "O Código do Patriarca é mais que um livro, é um manual prático e poderoso que revela os segredos profundos para você blindar a mente dos seus filhos, recuperar a autoridade amorosa dentro de casa e prepará-los para enfrentar esta geração sem perder o caráter e os valores familiares tradicionais."
+                question: "O QUE É O CÓDIGO DO PATRIARCA E QUAL A RELAÇÃO COMPLETA COM O PATERNIDADE COM PROPÓSITO?",
+                answer: "O Código do Patriarca é o método de ativação e a engrenagem conceitual que você utilizará para restaurar sua autoridade e blindar seus filhos. O conteúdo prático e completo que você receberá ao adquirir esta metodologia é o consagrado Treinamento, Livro e Manual 'Paternidade com Propósito - Um Manual Prático para Treinar Filhos Fortes'. O Código do Patriarca é o mecanismo transformador, e o pacote entregue é a formação e o material completo do Paternidade com Propósito."
               },
               {
-                question: "Como receberei o acesso ao livro?",
-                answer: "O envio é 100% automático e imediato. Assim que a cobrança simulada ou real for processada, você receberá os dados de acesso ao manual digital em formato PDF de modo a poder abrir imediatamente no e-mail fornecido."
+                question: "COMO E QUANDO RECEBEREI O MEU ACESSO?",
+                answer: "O envio é 100% automático e imediato. Assim que for confirmado o pagamento, você receberá instantaneamente um e-mail com todas as instruções detalhadas de acesso ao Treinamento Completo, Livro Digital e Manual prático do Paternidade com Propósito. O recebimento é na hora, direto no e-mail cadastrado."
               },
               {
-                question: "Por quanto tempo terei acesso ao livro?",
-                answer: "O seu acesso é vitalício para sempre. Uma vez adquirido, o conteúdo estará inteiramente disponível para ler, ouvir os áudios ou baixar para consultar nos momentos mais cruciais da criação de forma segura."
+                question: "O QUE EXATAMENTE EU VOU RECEBER AO GARANTIR MINHA INSCRIÇÃO?",
+                answer: "Você receberá o acesso definitivo ao nosso Treinamento completo em vídeo, o Livro principal e o Manual Prático 'Paternidade com Propósito', projetados para te dar direção absoluta na criação de filhos fortes e respeitosos, além de todos os materiais complementares e bônus da jornada."
+              },
+              {
+                question: "POR QUANTO TEMPO TEREI ACESSO AO CONTEÚDO?",
+                answer: "O seu acesso é vitalício. Toda a estrutura do Treinamento e do Manual Paternidade com Propósito estará permanentemente disponível para você e seu cônjuge consultarem sempre que precisarem reestabelecer o alinhamento, a ordem e o respeito dentro de casa."
+              },
+              {
+                question: "SERVE TAMBÉM SE MEUS FILHOS FOREM MAIS VELHOS OU AINDA MUITO PEQUENOS?",
+                answer: "Sim, sem dúvidas. Os princípios universais revelados no manual e no treinamento abrangem a psicologia e os pilares de conexão aplicáveis tanto à primeira infância quanto a pré-adolescentes e adolescentes, ajudando a criar uma ponte inquebrável de liderança paterna ou materna em qualquer idade."
               }
             ].map((faq, index) => {
               const isOpen = openFaqIndex === index;
@@ -2507,9 +2550,7 @@ export default function App() {
                       }`}
                       id={`block-15-faq-q-${index}`}
                     >
-                      {index === 0 && "O que é o manual Código do Patriarca?"}
-                      {index === 1 && "Como receberei acesso ao livro?"}
-                      {index === 2 && "Por quanto tempo terei acesso ao livro?"}
+                      {faq.question}
                     </span>
                     <span 
                       className={`text-lg font-black ml-4 select-none ${
@@ -2585,7 +2626,7 @@ export default function App() {
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden relative"
+              className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden relative animate-fade-in"
               id="checkout-modal"
             >
               
@@ -2594,9 +2635,8 @@ export default function App() {
                 onClick={() => {
                   setIsCheckoutOpen(false);
                   setCheckoutSuccess(false);
-                  setCheckoutStep(1);
                 }}
-                className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-white rounded-lg bg-white/5 border border-white/10 cursor-pointer"
+                className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-white rounded-lg bg-white/5 border border-white/10 cursor-pointer transition-colors z-10"
               >
                 ✕
               </button>
@@ -2604,11 +2644,11 @@ export default function App() {
               {/* Status Header of checkout */}
               <div className="p-5 bg-zinc-950 border-b border-white/5 flex items-center gap-3">
                 <div className="p-2 bg-[#2ECC71]/10 rounded-lg text-[#2ECC71] border border-[#2ECC71]/20">
-                  <Lock className="w-5 h-5" />
+                  <Lock className="w-5 h-5 animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase text-white font-montserrat tracking-tight">Compra Segura e Criptografada</h3>
-                  <p className="text-[9px] text-zinc-400 tracking-widest uppercase font-mono">Processamento de Transação Protegido</p>
+                  <h3 className="text-sm font-black uppercase text-white font-montserrat tracking-tight">Inscrição Segura e Protegida</h3>
+                  <p className="text-[9px] text-zinc-400 tracking-widest uppercase font-mono">Processamento Direto via WhatsApp</p>
                 </div>
               </div>
 
@@ -2617,113 +2657,133 @@ export default function App() {
                 {!checkoutSuccess ? (
                   <form onSubmit={handleCheckoutSubmit} className="space-y-4">
                     
-                    {/* Progress Bar of simulated purchase */}
-                    <div className="flex items-center justify-between text-[9px] text-[#CFCFCF] font-bold tracking-wider uppercase mb-1">
-                      <span className={checkoutStep === 1 ? 'text-[#FF2E2E]' : 'text-[#2ECC71]'}>1. Identificação</span>
-                      <span className="h-0.5 flex-1 bg-zinc-800 mx-2" />
-                      <span className={checkoutStep === 2 ? 'text-[#FF2E2E]' : ''}>2. Simular Pagamento</span>
-                    </div>
+                    <p className="text-zinc-400 text-xs text-center border-b border-white/5 pb-3">
+                      Insira seus dados reais para que seu acesso seja enviado de forma automática e imediata em seu e-mail assim que confirmado!
+                    </p>
 
-                    {checkoutStep === 1 ? (
-                      <div className="space-y-3.5">
-                        <div>
-                          <label className="block text-[10px] font-bold text-[#CFCFCF] uppercase tracking-widest mb-1 font-mono">Nome Completo</label>
-                          <input 
-                            type="text"
-                            required
-                            placeholder="Seu nome completo"
-                            value={formData.name}
-                            onChange={(e) => setFormData({...formData, name: e.target.value})}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl p-2.5 text-xs focus:border-[#B31217] outline-none text-white transition-colors"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-[#CFCFCF] uppercase tracking-widest mb-1 font-mono">E-mail Principal</label>
-                          <input 
-                            type="email"
-                            required
-                            placeholder="seuemail@exemplo.com"
-                            value={formData.email}
-                            onChange={(e) => setFormData({...formData, email: e.target.value})}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl p-2.5 text-xs focus:border-[#B31217] outline-none text-white transition-colors"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-[#CFCFCF] uppercase tracking-widest mb-1 font-mono">WhatsApp com DDD</label>
-                          <input 
-                            type="tel"
-                            required
-                            placeholder="(11) 99999-9999"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                            className="w-full bg-zinc-950 border border-white/10 rounded-xl p-2.5 text-xs focus:border-[#B31217] outline-none text-white transition-colors"
-                          />
-                        </div>
-
-                        <button
-                          type="submit"
-                          className="w-full bg-[#B31217] hover:bg-[#FF2E2E] text-white font-extrabold uppercase text-xs tracking-widest py-3 px-6 rounded-xl cursor-pointer transition-colors mt-2"
-                        >
-                          PROSSEGUIR PARA O PAGAMENTO
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="bg-zinc-950 p-4 rounded-xl border border-white/5 flex flex-col gap-2">
-                          <div className="flex justify-between text-xs text-gray-400">
-                            <span>Item: Código do Patriarca (Manual Completo)</span>
-                            <span className="text-white font-bold">R$ 97,00</span>
-                          </div>
-                          <div className="flex justify-between text-xs text-gray-400">
-                            <span>Desconto Especial de Lançamento</span>
-                            <span className="text-[#2ECC71] font-bold">- R$ 70,00</span>
-                          </div>
-                          <div className="h-px bg-white/5 my-1" />
-                          <div className="flex justify-between text-sm font-bold text-white">
-                            <span>TOTAL INTEGRAL:</span>
-                            <span className="text-[#2ECC71] text-base">R$ 27,00</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <p className="text-[10px] text-gray-400 text-justify">
-                            Este é um ambiente de demonstração integrada. Clique no botão de confirmação abaixo para simular o recebimento imediato no e-mail fornecido.
-                          </p>
-                          <button
-                            type="submit"
-                            className="w-full bg-[#2ECC71] hover:bg-[#27ae60] text-black font-black uppercase text-xs tracking-widest py-3 px-6 rounded-xl cursor-pointer transition-colors"
-                          >
-                            CONFIRMAR PAGAMENTO SIMULADO (R$ 27,00)
-                          </button>
-                        </div>
+                    {checkoutError && (
+                      <div className="bg-red-950/40 border border-[#B31217]/40 text-red-200 text-[11px] px-3.5 py-2.5 rounded-xl flex items-start gap-2.5 select-none" id="checkout-alert">
+                        <span className="text-[#FF2E2E] font-black text-sm leading-none shrink-0">⚠️</span>
+                        <span>{checkoutError}</span>
                       </div>
                     )}
 
+                    <div className="space-y-3.5">
+                      <div>
+                        <label className="flex items-center gap-1.5 text-[10px] font-semibold text-[#AFAFAF] uppercase tracking-widest mb-1.5 font-mono">
+                          <User className="w-3.5 h-3.5 text-zinc-500" />
+                          Nome Completo
+                        </label>
+                        <input 
+                          type="text"
+                          required
+                          placeholder="Seu nome completo"
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          className="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs focus:border-[#B31217] focus:ring-1 focus:ring-[#B31217] outline-none text-white transition-all shadow-inner placeholder:text-zinc-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="flex items-center gap-1.5 text-[10px] font-semibold text-[#AFAFAF] uppercase tracking-widest mb-1.5 font-mono">
+                          <Mail className="w-3.5 h-3.5 text-zinc-500" />
+                          E-mail Principal (Para Envio Imediato)
+                        </label>
+                        <input 
+                          type="email"
+                          required
+                          placeholder="seuemail@exemplo.com"
+                          value={formData.email}
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          className="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs focus:border-[#B31217] focus:ring-1 focus:ring-[#B31217] outline-none text-white transition-all shadow-inner placeholder:text-zinc-600"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="flex items-center gap-1.5 text-[10px] font-semibold text-[#AFAFAF] uppercase tracking-widest mb-1.5 font-mono">
+                          <Phone className="w-3.5 h-3.5 text-zinc-500" />
+                          WhatsApp (com DDD)
+                        </label>
+                        <input 
+                          type="tel"
+                          required
+                          placeholder="(69) 99229-4953"
+                          value={formData.phone}
+                          onChange={(e) => handlePhoneChange(e.target.value)}
+                          className="w-full bg-zinc-950 border border-white/10 rounded-xl p-3 text-xs focus:border-[#B31217] focus:ring-1 focus:ring-[#B31217] outline-none text-white transition-all shadow-inner placeholder:text-zinc-600"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-zinc-950 p-4 rounded-xl border border-white/5 flex flex-col gap-2 mt-4">
+                      <div className="flex justify-between text-[11px] text-gray-400">
+                        <span>Método Código do Patriarca (Treinamento Paternidade com Propósito)</span>
+                        <span className="text-white line-through">R$ 697,00</span>
+                      </div>
+                      <div className="flex justify-between text-[11px] text-gray-400">
+                        <span>Desconto Especial Somente Hoje</span>
+                        <span className="text-[#2ECC71] font-bold">- R$ 670,00</span>
+                      </div>
+                      <div className="h-px bg-white/5 my-1" />
+                      <div className="flex justify-between text-xs font-bold text-white">
+                        <span>VALOR PROMOCIONAL:</span>
+                        <span className="text-[#2ECC71] text-sm">R$ 27,00</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[10px] text-[#AFAFAF] mt-3 leading-relaxed text-center">
+                      *Ao clicar em prosseguir, abriremos diretamente o WhatsApp com sua mensagem pronta para confirmar o pagamento de R$ 27,00. Seu acesso será liberado no e-mail informado imediatamente após a confirmação.
+                    </p>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-[#B31217] hover:bg-[#FF2E2E] text-white font-extrabold uppercase text-xs tracking-widest py-3.5 px-6 rounded-xl cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] mt-3.5 shadow-lg shadow-[#B31217]/15 flex items-center justify-center gap-2"
+                    >
+                      <span>PROSSEGUIR PARA O PAGAMENTO (R$ 27,00)</span>
+                    </button>
                   </form>
                 ) : (
-                  <div className="text-center py-6 space-y-4">
-                    <div className="w-12 h-12 bg-[#2ECC71]/15 border border-[#2ECC71]/45 text-[#2ECC71] rounded-full flex items-center justify-center mx-auto animate-bounce">
-                      <Check className="w-6 h-6 stroke-[3]" />
+                  <div className="text-center py-8 space-y-5">
+                    <div className="w-14 h-14 bg-[#2ECC71]/15 border border-[#2ECC71]/45 text-[#2ECC71] rounded-full flex items-center justify-center mx-auto animate-bounce">
+                      <Check className="w-8 h-8 stroke-[3]" />
                     </div>
-                    <div>
-                      <h4 className="font-extrabold text-white uppercase text-sm font-montserrat">Compra Simulada com Sucesso!</h4>
-                      <p className="text-xs text-[#CFCFCF] mt-1.5 leading-relaxed">
-                        Parabéns! O simulador aprovou o pagamento. O acesso com o PDF, audiolivros e bônus foi simuladoramente despachado para o endereço: <br/>
-                        <span className="text-white font-bold underline text-[10px] block mt-1">{formData.email}</span>
+                    <div className="space-y-2">
+                      <h4 className="font-extrabold text-white uppercase text-sm font-montserrat tracking-tight">Acesso Pré-Registrado!</h4>
+                      <p className="text-xs text-[#CFCFCF] px-4 leading-relaxed">
+                        Perfeito! Seus dados foram salvos com sucesso.
                       </p>
+                      <p className="text-xs text-white bg-black/40 p-3 rounded-xl border border-white/5 font-mono text-left text-[11px]">
+                        👤 <strong>Nome</strong>: {formData.name}<br />
+                        📧 <strong>E-mail</strong>: {formData.email}<br />
+                        📱 <strong>WhatsApp</strong>: {formData.phone}
+                      </p>
+                      <div className="pt-3 flex flex-col items-center gap-3">
+                        <div className="flex items-center gap-2 text-xs text-[#2ECC71] font-bold">
+                          <span className="w-2.5 h-2.5 bg-[#2ECC71] rounded-full animate-ping" />
+                          Redirecionando para o WhatsApp...
+                        </div>
+                        <p className="text-[10px] text-zinc-400">
+                          Envie a mensagem pré-preenchida para obter ajuda com o pagamento e liberar seu acesso prioritário imediato no e-mail!
+                        </p>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        setIsCheckoutOpen(false);
-                        setCheckoutSuccess(false);
-                        setCheckoutStep(1);
-                      }}
-                      className="bg-white/5 hover:bg-white/10 text-white font-bold text-xs px-6 py-2.5 border border-white/10 rounded-xl transition-colors cursor-pointer"
-                    >
-                      Voltar ao Manual
-                    </button>
+
+                    <div className="pt-2">
+                      <a
+                        href={`https://api.whatsapp.com/send?phone=5569992294953&text=${encodeURIComponent(
+                          `Quero adquirir o Método Código do Patriarca: incluso integralmente dentro do Treinamento Paternidade com Propósito , de R$ 697,00 por apenas R$ 27,00 , que esta em promoção somente hoje.\n\n` +
+                          `📋 *DADOS PARA CADASTRO DE ACESSO EXCLUSIVO*:\n` +
+                          `👤 *Nome completo*: ${formData.name.trim()}\n` +
+                          `📧 *E-mail principal*: ${formData.email.trim()}\n` +
+                          `📱 *WhatsApp*: ${formData.phone.trim()}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block w-full bg-[#2ECC71] hover:bg-[#27ae60] text-black font-black uppercase text-xs tracking-widest py-3 px-6 rounded-xl transition-all font-sans text-center shadow-md cursor-pointer"
+                      >
+                        ABRIR WHATSAPP MANUALMENTE
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>
